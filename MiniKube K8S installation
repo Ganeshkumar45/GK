@@ -1,0 +1,38 @@
+ Minikube install in amazon linuX server
+ 
+ Step 1: Install Required Dependencies
+
+sudo dnf install -y curl wget conntrack git
+Optional but recommended if you’ll use Docker:
+
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user
+newgrp docker
+
+✅ Step 2: Install kubectl
+
+curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+kubectl version --clientclient
+
+
+✅ Step 3: Install minikube
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+minikube version
+✅ Step 4: Start Minikube
+Now start Minikube using the Docker driver:
+ 
+minikube start --driver=docker --force
+If you're not using Docker, you can also try the none driver (for bare-metal install):
+
+sudo minikube start --driver=none
+⚠️ Note: The --driver=none option runs Kubernetes components directly on the host, which may need root permissions and can conflict with other services.
+
+✅ Step 5: Verify Minikube
+
+kubectl get nodes
+You should see the Minikube node in Ready state.
