@@ -1,0 +1,89 @@
+https://www.linuxtechi.com/how-to-install-jenkins-on-ubuntu/
+
+INSTALLATION FOR JENKINS
+
+Prerequisites
+Pre-Install Ubuntu 24.04
+Non-root user with sudo privileges
+At least 2GB RAM or more
+25 GB disk space
+Internet Connectivity
+✅ Step-by-Step: Install Jenkins on Ubuntu 24.04
+Install Java (Jenkins requires Java):
+
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+Check Java version:
+java -version
+Add Jenkins repository key and source list:
+
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+Install Jenkins:
+
+sudo apt update
+sudo apt install jenkins -y
+Start and enable Jenkins:
+
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+Check Jenkins status:
+
+sudo systemctl status jenkins
+
+ sudo ufw allow 8080
+ 
+  sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+http://43.205.254.30:8080
+
+  
+ In the next step, select ‘Install suggested plugin‘ for simplicity’s sake.
+ 
+ When the installation of plugins is complete, the installer will take you to the next section where you will be required to create an Admin user and click on the ‘Save and Continue’ button.
+ The next step will populate the default URL for your Jenkin’s instance. No action is required, simply click ‘Save and Finish’.
+ Finally, click on the ‘Start using Jenkins’ button to gain access to Jenkins dashboard.
+
+
+
+
+
+###*********************************************************************************************##
+
+if  you've forgotten your Jenkins username and password. To regain access, you can reset the Jenkins administrator password by temporarily disabling security, creating a new admin user, and then re-enabling security. Here's how you can do it:
+
+1. Disable Security Temporarily:
+
+Stop Jenkins Service:
+sudo systemctl stop Jenkins
+
+This command stops the Jenkins service to allow configuration changes.
+
+Edit the Jenkins Configuration File:
+
+sudo nano /var/lib/jenkins/config.xml
+
+Replace /var/lib/jenkins/ with your Jenkins home directory if it's different.
+
+Locate the <useSecurity> tag.
+
+Change its value from true to false:
+
+<useSecurity>false</useSecurity>
+
+Save the file and exit the editor.
+2. Restart Jenkins Service:
+
+sudo systemctl start jenkins
+This command restarts Jenkins with security disabled.
+
+3. Access Jenkins Web Interface:
+
+Open your web browser and navigate to http://15.206.170.147:8080.
+ 
+ 
+ 
+ 
