@@ -1,0 +1,84 @@
+Amazon EKS cluster on Ubuntu using the South India (Asia Pacific – ap-south-1) region. Here's a complete step-by-step EKS setup on Ubuntu, using eksctl and kubectl, and targeting the ap-south-1 region (Mumbai).
+
+🛠️ Step-by-Step EKS Setup on Ubuntu (ap-south-1)
+✅ Step 1: Install Prerequisites on Ubuntu
+
+Open your terminal and run the following:
+
+1. Update packages
+sudo apt update && sudo apt upgrade -y
+
+2. Install awscli
+sudo apt install awscli -y
+
+3. Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+kubectl version --client
+
+4. Install eksctl
+curl --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz
+sudo mv eksctl /usr/local/bin
+eksctl version
+
+✅ Step 2: Configure AWS CLI
+aws configure
+
+
+Enter the following when prompted:
+
+AWS Access Key ID: Your key
+
+AWS Secret Access Key: Your secret
+
+Default region name: ap-south-1
+
+Default output format: json (or leave blank)
+
+✅ Step 3: Create EKS Cluster in ap-south-1
+
+Now create your EKS cluster using eksctl:
+
+eksctl create cluster \
+  --name my-eks-cluster \
+  --region ap-south-1 \
+  --nodegroup-name linux-nodes \
+  --node-type t3.medium \
+  --nodes 2 \
+  --nodes-min 1 \
+  --nodes-max 3 \
+  --managed
+
+
+✅ This step will:
+
+Create a new VPC
+
+Launch EKS control plane
+
+Add EC2 worker nodes (managed)
+
+Note: It takes around 10–15 minutes.
+
+✅ Step 4: Verify Cluster is Working
+kubectl get nodes
+
+
+You should see your EC2 worker nodes in the Ready state.
+
+✅ Step 5: Deploy a Sample App (Optional)
+kubectl create deployment hello-world --image=nginx
+kubectl expose deployment hello-world --type=LoadBalancer --port=80
+kubectl get svc
+
+
+After a few minutes, you will get an EXTERNAL-IP to test in the browser.
+
+🧹 Step 6: (Optional) Clean Up
+
+To delete the entire cluster and free AWS resources:
+
+eksctl delete cluster --name my-eks-cluster --region ap-south-1
+
+✅ Summary
