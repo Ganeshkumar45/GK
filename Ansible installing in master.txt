@@ -1,0 +1,88 @@
+Installing Ansible
+1. On CentOS/RHEL 7 and 8
+For CentOS or RHEL, you can install Ansible by running the following commands:
+
+For CentOS/RHEL 7:
+
+sudo yum install epel-release
+sudo yum install ansible 
+ansible 
+For CentOS/RHEL 8:
+
+sudo dnf install epel-release
+sudo dnf install ansible
+2. On Ubuntu/Debian-based Systems
+For Ubuntu or Debian, you can install Ansible with the following commands:
+
+sudo apt update
+sudo apt install ansible
+3. Verifying Ansible Installation
+Once Ansible is installed, you can verify it with the following command:
+
+ansible --version
+This should return the version of Ansible that is installed.
+
+create Vi editor on file and save .yml 
+
+Playbook
+#######################################
+---
+- name: Install Java and Maven on Amazon Linux 2023
+  hosts: localhost
+  become: yes
+  connection: local
+  tasks:
+
+    - name: Install Java (OpenJDK 11, fallback to 17)
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - java-11-amazon-corretto
+        - java-17-amazon-corretto
+      register: java_installation
+      ignore_errors: yes
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_output
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Debug Java Version
+      debug:
+        msg: "Java Version: {{ java_output.stdout_lines }}"
+      when: java_output.stdout_lines is defined
+
+    - name: Install Maven
+      package:
+        name: maven
+        state: present
+
+    - name: Set environment variables for Java and Maven
+      ansible.builtin.blockinfile:
+        path: /etc/profile.d/maven.sh
+        create: yes
+        block: |
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+          export PATH=$JAVA_HOME/bin:$PATH
+        mode: '0644'
+
+    - name: Load environment variables
+      shell: source /etc/profile.d/maven.sh
+      args:
+        executable: /bin/bash
+
+    - name: Verify Maven installation
+      command: mvn -version
+      register: maven_output
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Debug Maven Version
+      debug:
+        msg: "Maven Version: {{ maven_output.stdout_lines }}"
+      when: maven_output.stdout_lines is defined
+
+
+ansible-playbook install.yml
