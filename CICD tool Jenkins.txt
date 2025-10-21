@@ -1,0 +1,62 @@
+CICD tool--->Jenkins
+=====================================================
+We can create multiple projects/jobs in jenkins
+
+1.Freestyle job/project
+
+plugin git
+
+2.Maven project/job
+
+plugin maven-integration
+
+3.Pipeline
+scripted way
+Declarative way
+
+plugin pipeline
+
+4.multibranch pipeline etc
+
+multibranch plugin
+
+======================================================
+
+prerequisites to create jobs/project based on projects java 
+
+all project dependent softwares need to install in jenkins server
+java
+git
+maven
+and plugins--> git maven integration,nexus uploader plugin deploy to container(for tomcat)etc
+
+================================================================
+1.jenkins server with credentilas
+
+http://13.201.27.236:8080/ admin/Admin@123
+
+2.Github details with credentials
+https://github.com/Ganeshkumar45/war-web-project.git
+
+3.nexus server with credentials
+http://52.66.196.37:8081/ admin/Admin@123
+
+4. sonar qube with credentilas
+http://35.154.164.0:9000/ admin/Admin@123
+
+5 tomcat server details with credentials
+
+http://13.127.29.117:8080/ admin/Admin@123
+
+above all credentials need to configure in jenkins
+
+==================================================================
+
+
+http://13.233.68.254:8080/
+admin/Admin@123
+https://github.com/Rama3058/war-web-project.git
+
+
+
+
