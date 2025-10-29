@@ -1,0 +1,294 @@
+When a developer commits code to GitHub → Jenkins automatically builds the Java project using Maven → runs JUnit tests → deploys the .war file to Tomcat server.
+
+1. What is Jenkins and how does it work?
+
+Answer:
+Jenkins is an open-source CI/CD automation tool that helps automate the build, test, and deployment phases of software.
+
+Real-time Example:
+In my previous project, we used Jenkins to automate the CI/CD pipeline for a Spring Boot microservices application:
+When developers pushed code to the GitHub repo, Jenkins detected changes via webhook.
+Jenkins automatically triggered a Maven build to compile the code.
+Then it ran JUnit test cases to verify quality.
+If tests passed, it built a Docker image and pushed it to Docker Hub.
+Finally, Jenkins deployed that Docker image to a Kubernetes cluster.
+Pipeline flow:
+
+GitHub → Jenkins (Build + Test) → Docker → Kubernetes
+
+2. What is a Jenkins Pipeline?
+
+Answer:
+A Jenkins Pipeline is a set of automated steps written as code in a Jenkinsfile, defining how your application moves from build → test → deploy.
+
+Real-time Example:
+Jenkinsfile I used in a project to build a Node.js app and deploy it to AWS EKS (Kubernetes):
+
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/devops-team/myapp.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'npm install'
+                sh 'npm run build'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                withCredentials([string(credentialsId: 'docker-hub-token', variable: 'TOKEN')]) {
+                    sh 'docker build -t myrepo/myapp:latest .'
+                    sh 'echo $TOKEN | docker login -u myuser --password-stdin'
+                    sh 'docker push myrepo/myapp:latest'
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f k8s/deployment.yaml'
+            }
+        }
+    }
+}
+
+3. Difference between Declarative and Scripted Pipeline
+Type	Declarative	Scripted
+Syntax	Simple, structured (uses pipeline {})	Groovy-based (flexible, code-like)
+Readability	Easier to read	More complex
+Example	See below	See below
+
+i)Declarative Example (used for microservice build):
+
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps { sh 'mvn clean package' }
+        }
+    }
+}
+
+
+ii)Scripted Example (used for complex builds):
+
+node {
+    stage('Build') {
+        sh 'mvn clean package'
+    }
+    stage('Deploy') {
+        sh './deploy.sh'
+    }
+}
+
+
+Real-time Use:
+In my CI/CD setup, we used Declarative Pipelines for most microservices (simple builds), and Scripted Pipelines for complex workflows (multi-branch logic or dynamic parameters).
+
+4. How do you secure Jenkins?
+
+Answer:
+Security involves protecting Jenkins credentials, access control, and communication.
+
+Real-time Practices:
+
+Integrated Jenkins with Active Directory for user authentication.
+Enabled Matrix-based security to limit developer permissions.
+Installed Credentials Binding Plugin for secret storage.
+Enabled HTTPS via an Nginx reverse proxy.
+Configured role-based access control (RBAC) — developers could view jobs, but only admins could configure them.
+
+Example in Pipeline:
+
+withCredentials([string(credentialsId: 'AWS_ACCESS_KEY', variable: 'AWS_KEY')]) {
+    sh 'aws s3 ls --access-key $AWS_KEY'
+}
+
+5. How to integrate Jenkins with GitHub, Docker, and Kubernetes?
+
+Answer:
+
+🔹 GitHub Integration:
+
+Installed Git Plugin in Jenkins.
+
+Added a GitHub Webhook (URL: http://jenkins-server/github-webhook/)
+
+Used this step:
+
+git branch: 'main', url: 'https://github.com/myorg/sample-app.git'
+
+
+Real Example: Jenkins triggers automatically whenever code is pushed to the main branch.
+
+🔹 Docker Integration:
+
+Installed Docker plugin and configured Docker on Jenkins node.
+
+Jenkins builds and pushes Docker images.
+
+Example:
+
+sh 'docker build -t myrepo/sample-app:v1 .'
+sh 'docker push myrepo/sample-app:v1'
+
+
+Real Example:
+Every new build created a fresh image and pushed it to Docker Hub, which Kubernetes later pulled.
+
+🔹 Kubernetes Integration:
+
+Installed Kubernetes Plugin.
+
+Configured Jenkins to use K8s pods as dynamic agents.
+
+Deployment handled via kubectl.
+
+Example:
+
+sh 'kubectl set image deployment/myapp myapp=myrepo/sample-app:v1'
+
+
+Real Example:
+After image push, Jenkins automatically updated the running deployment in AWS EKS.
+
+6. How do you create and use Jenkins Agents?
+
+Answer:
+Agents (or nodes) help distribute jobs across multiple machines.
+
+Real-time Example:
+
+I configured one master and three agents:
+
+Linux Agent → Build & test backend Java services
+
+Windows Agent → Build .NET apps
+
+Docker Agent → Build and push Docker images
+
+Pipeline Example:
+
+pipeline {
+    agent { label 'docker-agent' }
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t myrepo/app:latest .'
+            }
+        }
+    }
+}
+
+7. What is Blue Ocean in Jenkins?
+
+Answer:
+Blue Ocean is a modern Jenkins UI plugin for visualizing pipelines.
+
+Real-time Example:
+We used Blue Ocean to monitor multi-branch pipelines visually — for example:
+feature/login-api branch → Build failed (red)
+main branch → Build succeeded (green)
+This gave the QA team quick visibility into which features were ready to test.
+
+8. How do you schedule builds?
+
+Answer:
+You can schedule Jenkins jobs using CRON syntax in “Build Triggers”.
+
+Real-time Example:
+I scheduled nightly regression tests for the QA environment:
+
+Time: Every night at 2 AM
+
+Cron: H 2 * * *
+
+Example:
+
+triggers {
+    cron('H 2 * * *')
+}
+
+
+This ran automation scripts using Selenium nightly and reported results to Slack.
+
+9. What happens if Jenkins master goes down?
+
+Answer:
+If the master node goes down:
+Jenkins UI and job scheduling stop.
+Agents can’t receive new jobs.
+Ongoing builds may fail.
+
+Real-time Example:
+In my setup, we configured Jenkins in Kubernetes with persistent storage.
+If the master pod crashed, Kubernetes automatically restarted it with the same data from the PVC ($JENKINS_HOME).
+
+*We also took daily backups of /var/lib/jenkins.
+
+10. How to perform Jenkins Backup and Restore?
+
+Answer:
+Jenkins stores all configurations in $JENKINS_HOME.
+
+Real-time Example:
+We used a simple cron job to back up Jenkins every night:
+
+tar -czvf /backup/jenkins_backup_$(date +%F).tar.gz /var/lib/jenkins
+
+
+Restore Process:
+
+sudo systemctl stop jenkins
+sudo rm -rf /var/lib/jenkins/*
+sudo tar -xzvf /backup/jenkins_backup_2025-10-29.tar.gz -C /var/lib/jenkins
+sudo systemctl start jenkins
+
+
+This allowed us to restore Jenkins on a new server within 10 minutes during a DR (Disaster Recovery) drill.
+
+
+
+
+***************************************************************************
+
+
+🧭 Workflow Overview
+
+Code Commit
+Developer pushes code (and maybe a Dockerfile, Jenkinsfile) into a GitHub repo.
+
+Trigger Jenkins Pipeline
+A GitHub webhook notifies Jenkins, triggering the pipeline.
+
+Build & Test
+Jenkins checks out code → builds (e.g., using Maven/Gradle/npm) → runs unit/integration tests.
+
+Docker Image Creation
+Jenkins builds a Docker image (with the tested code) and tags it (e.g., app:build-123).
+
+Image Push
+The image is pushed to a container registry (Docker Hub, AWS ECR, etc.).
+
+Kubernetes Deployment
+Jenkins triggers or updates Kubernetes manifests (or uses Helm) so the cluster pulls the new image and deploys it.
+
+Monitoring & Feedback
+After deployment, monitoring/logging tools pick up status → feedback loop to developers (if failures/errors).
+
+
+image 
+https://miro.medium.com/1%2AP3CIUtdZbg0uXg4hMdK9CA.png
+
+
+
+
+
