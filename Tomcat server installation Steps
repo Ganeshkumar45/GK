@@ -1,0 +1,125 @@
+NOTE : Based on Apache Tomcat versions changed it will be automatically changedin Doccument.
+Apache Tomcat 10 Installation Steps (Ubuntu/Debian)
+***************************************************************************
+Step 1: Update system packages
+sudo apt update
+sudo apt upgrade -y
+
+Step 2: Install Java (OpenJDK 17)
+
+Tomcat 10 requires Java 11 or later (Java 17 recommended).
+sudo apt install openjdk-17-jdk -y
+Verify Java installation:
+
+java -version
+You should see something like:
+openjdk version "17.0.x" ...
+
+Step 3: Create a Tomcat user and group
+sudo groupadd tomcat
+sudo useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+
+Step 4: Download Apache Tomcat 10
+Go to /tmp and download the latest Tomcat 10 version (example: 10.1.31):
+cd /tmp
+wget https://downloads.apache.org/tomcat/tomcat-10/v10.1.31/bin/apache-tomcat-10.1.31.tar.gz
+Check for the latest version on https://tomcat.apache.org/download-10.cgi
+ and adjust URL accordingly.
+
+Step 5: Extract Tomcat archive to /opt/tomcat
+sudo mkdir /opt/tomcat
+sudo tar xzf apache-tomcat-10.1.31.tar.gz -C /opt/tomcat --strip-components=1
+
+Step 6: Change ownership and permissions
+sudo chown -R tomcat:tomcat /opt/tomcat
+sudo chmod -R u+rwx /opt/tomcat
+sudo chmod -R go-rwx /opt/tomcat/conf
+sudo chmod -R go+r /opt/tomcat/logs /opt/tomcat/temp /opt/tomcat/webapps /opt/tomcat/work
+
+Step 7: Create systemd service file for Tomcat
+
+Create and open the service file:
+sudo nano /etc/systemd/system/tomcat.service
+Paste this content:
+**************************************************************************************
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=network.target
+
+[Service]
+Type=forking
+
+User=tomcat
+Group=tomcat
+
+Environment="JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
+Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
+Environment="CATALINA_HOME=/opt/tomcat"
+Environment="CATALINA_BASE=/opt/tomcat"
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+********************************************************************************************
+
+Save (Ctrl+O) and exit (Ctrl+X).
+Step 8: Reload systemd and start Tomcat
+
+sudo systemctl daemon-reload
+sudo systemctl start tomcat
+sudo systemctl enable tomcat
+Check status:
+sudo systemctl status tomcat
+You should see it active (running).
+
+Step 9: Configure Tomcat users for Manager and Admin
+Edit the users config:
+
+sudo nano /opt/tomcat/conf/tomcat-users.xml
+Add inside <tomcat-users> tags:
+******************************************************************************************
+<role rolename="manager-gui"/>
+<role rolename="admin-gui"/><role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="manager-jmx"/>
+<role rolename="manager-status"/>
+<role rolename="admin-gui"/>
+<role rolename="admin-script"/>
+<user username="admin" password="admin" roles="manager-gui,admin-gui"/>
+
+*********************************************************************************************
+Save and exit.
+
+Step 10: Allow remote access to Manager app
+
+Edit the Manager context file:
+sudo nano /opt/tomcat/webapps/manager/META-INF/context.xml
+
+Comment out or remove the <Valve> line that restricts access:
+***************************************************************************************************
+<!-- <Valve className="org.apache.catalina.valves.RemoteAddrValve" allow="127\.0\.0\.1"/> -->
+***************************************************************************************************
+Save and exit.
+
+Step 11: Restart Tomcat to apply changes
+sudo systemctl restart tomcat
+
+Step 12: Open port 8080 in firewall (if applicable)
+
+If you have ufw firewall enabled:
+
+sudo ufw allow 8080/tcp
+sudo ufw reload
+
+Step 13: Access Tomcat in browser
+Go to:
+http://<your-server-ip>:8080/
+To access manager app:
+http://<your-server-ip>:8080/manager/html
+
+Log in with:
+Username: admin
+Password: admin
